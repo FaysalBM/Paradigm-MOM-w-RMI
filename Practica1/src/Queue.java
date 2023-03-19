@@ -1,5 +1,5 @@
 import java.rmi.Remote;
-import java.rmi.RemoteException;
-public interface Queue extends Remote {
 
+public interface Queue<S> extends Remote {
+    void add(S message);
 }
