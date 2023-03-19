@@ -4,16 +4,16 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
-public class MessageAPIImpl extends UnicastRemoteObject implements MessageAPI, Runnable {
+public class MessageAPIImpl extends UnicastRemoteObject implements MessageAPI {
     private Queue<String> messageQueue;
     protected MessageAPIImpl() throws RemoteException {
         super();
     }
 
-    @Override
+    /*@Override
     public void MsqQ_Init(String ServerAddress) {
-
-    }
+        System.out.println("sad");
+    }*/
 
     @Override
     public void sendMessage(String message) throws RemoteException {
@@ -24,10 +24,6 @@ public class MessageAPIImpl extends UnicastRemoteObject implements MessageAPI, R
         return messageQueue.toString();
     }
 
-    @Override
-    public void run() {
-
-    }
     /*
     @Override
     public Object MsgQ_CreateQueue(String msgqname) {

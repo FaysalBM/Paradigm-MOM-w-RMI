@@ -19,14 +19,9 @@ public class Server {
 
             // Enlazar el objeto remoto (stub) con el registro de RMI.
             Registry registry = LocateRegistry.getRegistry();
-            registry.rebind("MessagingAPI", bombilla);
+            registry.rebind("MessageAPI", bombilla);
             System.err.println("Server ready");
 
-            // Create a thread, and pass the sensor server.
-            // This will activate the run() method, and trigger
-            // regular temperature changes.
-            Thread thread = new Thread ((Runnable) servicioBombilla);
-            thread.start();
         }
         catch (RemoteException re)
         {

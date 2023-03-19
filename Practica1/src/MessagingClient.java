@@ -24,7 +24,7 @@ public class MessagingClient {
             registry = args[0];
 
         // Formatear la url del registro
-        String registro ="rmi://" + registry + "/MessagingAPI";
+        String registro ="rmi://" + registry + "/MessageAPI";
 
         // Buscar el servicio en el registro.
         Remote servicioRemoto = Naming.lookup(registro);
@@ -33,7 +33,7 @@ public class MessagingClient {
         MessageAPI servicioMensaje = (MessageAPI) servicioRemoto;
 
         // Encender la bombilla
-        System.out.println("Invocando servicioBombilla.on()");
+        System.out.println("Invocando sendMessage");
         servicioMensaje.sendMessage("hola");
 
         System.out.println(servicioMensaje.receiveMessage("x"));
