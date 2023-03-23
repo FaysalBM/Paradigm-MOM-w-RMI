@@ -1,5 +1,4 @@
 public class SumatorioMPrimos {
-
     public static long calcularSumaPrimos(long begin,long end) {
         long sumaPrimos = 0;
         long contador = 0;

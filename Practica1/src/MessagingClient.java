@@ -3,28 +3,26 @@ import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 
 public class MessagingClient {
     private MessageAPI messagingAPI;
 
-    public MessagingClient() throws RemoteException, NotBoundException, MalformedURLException {
-        messagingAPI = (MessageAPI) Naming.lookup("MessagingAPI");
+    public MessagingClient() {
+
     }
 
-    public void sendMessage(Message message) throws RemoteException {
-        messagingAPI.sendMessage("message");
-    }
-
-    public String receiveMessage(String recipient) throws RemoteException {
-        return messagingAPI.receiveMessage(recipient);
-    }
     public static void main(String[] args) throws MalformedURLException, NotBoundException, RemoteException {
-        String registry = "localhost";
-        if (args.length >=1)
-            registry = args[0];
+        Registry registry = LocateRegistry.getRegistry("127.0.0.1", 0);
+        String tempR = "127.0.0.1";
+        if (args.length >= 1){
+            registry = LocateRegistry.getRegistry(args[0], 0);
+            tempR = args[0];
+        }
 
         // Formatear la url del registro
-        String registro ="rmi://" + registry + "/MessageAPI";
+        String registro ="rmi://" + tempR + "/MessengerRMI";
 
         // Buscar el servicio en el registro.
         Remote servicioRemoto = Naming.lookup(registro);
@@ -33,10 +31,10 @@ public class MessagingClient {
         MessageAPI servicioMensaje = (MessageAPI) servicioRemoto;
 
         // Encender la bombilla
-        System.out.println("Invocando sendMessage");
-        servicioMensaje.sendMessage("hola");
+        while(true){
 
-        System.out.println(servicioMensaje.receiveMessage("x"));
+        }
+
 
     }
 }
