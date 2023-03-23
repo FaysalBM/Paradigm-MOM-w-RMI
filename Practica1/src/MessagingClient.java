@@ -6,7 +6,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
-public class MessagingClient {
+public class MessagingClient implements TopicListenerInterface{
     private MessageAPI messagingAPI;
 
     public MessagingClient() {
@@ -29,12 +29,19 @@ public class MessagingClient {
 
         // Convertir a un interfaz
         MessageAPI servicioMensaje = (MessageAPI) servicioRemoto;
-
         // Encender la bombilla
         while(true){
 
         }
+    }
 
+    @Override
+    public void onTopicMessage(Message message) {
+        System.out.println("Recibed a message from a topic!");
+    }
 
+    @Override
+    public void onTopicClose(String topic) {
+        System.out.println("The queue of the topic "+topic+" has closed!");
     }
 }

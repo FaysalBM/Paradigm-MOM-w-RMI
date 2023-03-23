@@ -5,7 +5,7 @@ import java.util.Queue;
 public class MessageAPIImpl implements MessageAPI {
 
 
-    public HashMap<String, Vector<TopicQueue>> topicQueues;
+    public HashMap<String, TopicQueue> topicQueues;
     public HashMap<String, Vector<Message>> topicMessages;
     protected MessageAPIImpl() throws RemoteException {
         super();
@@ -33,11 +33,11 @@ public class MessageAPIImpl implements MessageAPI {
         if (!topicMessages.containsKey(msgqname)){
             return new EMomError("P2P Chat doesn't exist");
         }else{
-            topicMessages.get(msgqname).clear();
+            topicMessages.remove(msgqname);
         }
         return new EMomError("Done");
     }
-
+    //Controlar condiciones de carrera al publicar
     @Override
     public EMomError MsgQ_SendMessage(String msgqname, String message, int type) {
         if(!topicMessages.containsKey(msgqname)) return new EMomError("Error, cola closed");
@@ -59,21 +59,42 @@ public class MessageAPIImpl implements MessageAPI {
 
     @Override
     public EMomError MsgQ_CreateTopic(String topicname, EPublishMode mode) {
-        return null;
+        if(topicQueues.containsKey(topicname)){
+            return new EMomError("Topic Queue already created");
+        }else{
+            topicQueues.put(topicname, new TopicQueue(mode));
+        }
+        return new EMomError("Topic Queue created");
     }
 
     @Override
     public EMomError MsgQ_CloseTopic(String topicname) {
-        return null;
+        if(topicQueues.get(topicname).messages.capacity() == 0){
+            topicQueues.remove(topicname);
+            return new EMomError("Topic Queue deleted");
+        }return new EMomError("Topc Queue still has messages");
     }
 
+    //Controlar condiciones de carrera al publicar
     @Override
     public EMomError MsgQ_Publish(String topic, String message, int type) {
-        return null;
+        if(topicQueues.containsKey(topic)){
+            topicQueues.get(topic).addMessage(new Message(message, type));
+            //Recorrer los usuarios de ese topic i invocar el metodo de onTopicMessage del listener de los suscritores
+            for(int i = 0; i < topicQueues.get(topic).clientsSuscribed.capacity(); i++){
+                topicQueues.get(topic).clientsSuscribed.get(i).onTopicMessage(new Message(message, type));
+            }
+            return new EMomError("Message Published");
+        }
+        return new EMomError("No Queue with that topic");
     }
 
     @Override
     public EMomError MsgQ_Subscribe(String topic, TopicListenerInterface listener) {
-        return null;
+        if(topicQueues.containsKey(topic)){
+            topicQueues.get(topic).subClient(listener);
+            return new EMomError("Client Subscribed");
+        }
+        return new EMomError("No Queue with that topic");
     }
 }

@@ -2,13 +2,21 @@ import java.util.HashMap;
 import java.util.Vector;
 
 public class TopicQueue {
-    public HashMap<String, Vector<ClientListener>> clientsSuscribed;
-    public Vector<String> messages;
-    public EPublishMode modeP;
+    Vector<TopicListenerInterface> clientsSuscribed;
+    Vector<Message> messages;
+    final EPublishMode modeP;
     public TopicQueue(EPublishMode mode){
-        clientsSuscribed = new HashMap<>();
+        clientsSuscribed = new Vector<>();
         messages = new Vector<>();
         modeP = mode;
     }
-
+    public void addMessage(Message mess){
+        messages.add(mess);
+    }
+    public void subClient(TopicListenerInterface cl){
+        clientsSuscribed.add(cl);
+    }
+    public void unsubClient(TopicListenerInterface cl){
+        clientsSuscribed.remove(cl);
+    }
 }
