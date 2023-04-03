@@ -1,31 +1,43 @@
+import javax.swing.*;
+import java.net.MalformedURLException;
+import java.rmi.Naming;
 import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
 import java.util.Queue;
 
 public class MessageAPIImpl implements MessageAPI {
 
 
-    public HashMap<String, TopicQueue> topicQueues;
-    public HashMap<String, Vector<Message>> topicMessages;
+    public HashMap<String,TopicQueue> topicQueues = new HashMap<String, TopicQueue>();
+    public HashMap<String, Vector<Message>> topicMessages = new HashMap<>();
     protected MessageAPIImpl() throws RemoteException {
         super();
     }
 
     @Override
-    public void MsqQ_Init(String ServerAddress) {
-        topicQueues = new HashMap<>();
-        topicMessages = new HashMap<>();
+    public void MsqQ_Init(String ServerAddress) throws RemoteException, MalformedURLException {
+
+        MessageAPI apiMess = (MessageAPI) UnicastRemoteObject.exportObject(this, 0);
+        Registry registry = LocateRegistry.getRegistry(ServerAddress, 0);
+        // Crear la URL del registro.
+        String registro ="rmi://" + ServerAddress + "/MessengerRMI";
+        // Registrar el servicio
+        Naming.rebind(registro, apiMess);
+        System.err.println("API ready");
     }
 
-    @Override
+
     public EMomError MsgQ_CreateQueue(String msgqname) {
         Vector<Message> cola = new Vector<>();
         if (topicMessages.containsKey(msgqname)){
-            return new EMomError("P2P chat already exist");
+            return null;
         }else{
             topicMessages.put(msgqname, cola);
         }
-        return new EMomError("Done");
+        return null;
     }
 
     @Override
@@ -60,41 +72,45 @@ public class MessageAPIImpl implements MessageAPI {
     @Override
     public EMomError MsgQ_CreateTopic(String topicname, EPublishMode mode) {
         if(topicQueues.containsKey(topicname)){
-            return new EMomError("Topic Queue already created");
+            return null;
         }else{
             topicQueues.put(topicname, new TopicQueue(mode));
         }
-        return new EMomError("Topic Queue created");
+        return null;
     }
 
     @Override
     public EMomError MsgQ_CloseTopic(String topicname) {
-        if(topicQueues.get(topicname).messages.capacity() == 0){
+        if(topicQueues.get(topicname).messages.size() == 0){
             topicQueues.remove(topicname);
             return new EMomError("Topic Queue deleted");
-        }return new EMomError("Topc Queue still has messages");
+        }
+        return new EMomError("Topc Queue still has messages");
     }
 
     //Controlar condiciones de carrera al publicar
     @Override
-    public EMomError MsgQ_Publish(String topic, String message, int type) {
+    public EMomError MsgQ_Publish(String topic, String message, int type) throws MalformedURLException, RemoteException {
         if(topicQueues.containsKey(topic)){
             topicQueues.get(topic).addMessage(new Message(message, type));
+            int x = topicQueues.get(topic).clientsSuscribed.size();
+            System.out.println("Clients subscribed: "+x);
             //Recorrer los usuarios de ese topic i invocar el metodo de onTopicMessage del listener de los suscritores
-            for(int i = 0; i < topicQueues.get(topic).clientsSuscribed.capacity(); i++){
-                topicQueues.get(topic).clientsSuscribed.get(i).onTopicMessage(new Message(message, type));
+            for(int i = 0; i < x; i++){
+                topicQueues.get(topic).clientsSuscribed.get(i).onTopicMessage("Hola");
             }
-            return new EMomError("Message Published");
+            System.out.println("Messsage added");
+            return null;
         }
-        return new EMomError("No Queue with that topic");
+        return null;
     }
 
     @Override
     public EMomError MsgQ_Subscribe(String topic, TopicListenerInterface listener) {
         if(topicQueues.containsKey(topic)){
             topicQueues.get(topic).subClient(listener);
-            return new EMomError("Client Subscribed");
+            return null;
         }
-        return new EMomError("No Queue with that topic");
+        return null;
     }
 }

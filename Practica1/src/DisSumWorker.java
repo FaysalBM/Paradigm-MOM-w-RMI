@@ -5,13 +5,9 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 
-public class MessagingClient implements TopicListenerInterface{
-    private MessageAPI messagingAPI;
-
-    public MessagingClient() {
-
-    }
+public class DisSumWorker implements TopicListenerInterface{
 
     public static void main(String[] args) throws MalformedURLException, NotBoundException, RemoteException {
         Registry registry = LocateRegistry.getRegistry("127.0.0.1", 0);
@@ -29,19 +25,23 @@ public class MessagingClient implements TopicListenerInterface{
 
         // Convertir a un interfaz
         MessageAPI servicioMensaje = (MessageAPI) servicioRemoto;
-        // Encender la bombilla
+        DisSumWorker monitor = new DisSumWorker();
+
+        // Exportar el objeto de la clase de la implementación al stub del interfase.
+        TopicListenerInterface emonitor = (TopicListenerInterface) UnicastRemoteObject.exportObject(monitor, 0);
+        servicioMensaje.MsgQ_Subscribe("Work", emonitor);
         while(true){
 
         }
     }
 
     @Override
-    public void onTopicMessage(Message message) {
-        System.out.println("Recibed a message from a topic!");
+    public void onTopicMessage(String message) {
+        System.out.println(message);
     }
 
     @Override
     public void onTopicClose(String topic) {
-        System.out.println("The queue of the topic "+topic+" has closed!");
+        System.out.println(topic);
     }
 }

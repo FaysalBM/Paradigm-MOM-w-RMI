@@ -4,11 +4,10 @@ import java.util.Vector;
 public class TopicQueue {
     Vector<TopicListenerInterface> clientsSuscribed;
     Vector<Message> messages;
-    final EPublishMode modeP;
+    final EPublishMode modeP = new EPublishMode("");
     public TopicQueue(EPublishMode mode){
         clientsSuscribed = new Vector<>();
         messages = new Vector<>();
-        modeP = mode;
     }
     public void addMessage(Message mess){
         messages.add(mess);
