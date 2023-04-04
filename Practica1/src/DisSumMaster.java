@@ -11,6 +11,7 @@ import java.util.concurrent.Semaphore;
 import static java.lang.Thread.sleep;
 
 public class DisSumMaster implements TopicListenerInterface{
+    public int totalResult = 0;
     public static void main(String[] args) throws MalformedURLException, NotBoundException, RemoteException, InterruptedException {
         Registry registry = LocateRegistry.getRegistry("127.0.0.1", 0);
         String tempR = "127.0.0.1";
@@ -71,6 +72,8 @@ public class DisSumMaster implements TopicListenerInterface{
     @Override
     public void onTopicMessage(String message) throws RemoteException, MalformedURLException {
         System.out.println("Received the value calculated: " + message);
+        totalResult = totalResult + Integer.parseInt(message);
+        System.out.println("Total result for now is: "+totalResult);
     }
 
     @Override
