@@ -5,11 +5,12 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.concurrent.Semaphore;
 
 import static java.lang.Thread.sleep;
 
-public class DisSumMaster{
+public class DisSumMaster implements TopicListenerInterface{
     public static void main(String[] args) throws MalformedURLException, NotBoundException, RemoteException, InterruptedException {
         Registry registry = LocateRegistry.getRegistry("127.0.0.1", 0);
         String tempR = "127.0.0.1";
@@ -32,6 +33,12 @@ public class DisSumMaster{
         Semaphore tempSem = servicioMensaje.getSemaphore(numWorkers);
         servicioMensaje.MsgQ_CreateTopic("Work", null);
         servicioMensaje.MsgQ_CreateTopic("Results", null);
+
+        //Subsrcibe the master to receive the messages from users.
+        DisSumMaster monitor = new DisSumMaster();
+        TopicListenerInterface emonitor = (TopicListenerInterface) UnicastRemoteObject.exportObject(monitor, 0);
+        servicioMensaje.MsgQ_Subscribe("Results",emonitor);
+
         try {
             tempSem.acquire();
             int calculate = Integer.parseInt(args[0]);
@@ -57,8 +64,15 @@ public class DisSumMaster{
         }catch (InterruptedException e) {
             // Handle InterruptedException
         }
-
-
     }
 
+    @Override
+    public void onTopicMessage(String message) throws RemoteException, MalformedURLException {
+        System.out.println("Received the value calculated: " + message);
+    }
+
+    @Override
+    public void onTopicClose(String topic) throws RemoteException, MalformedURLException {
+        System.out.println("Topic closed: " + topic);
+    }
 }
