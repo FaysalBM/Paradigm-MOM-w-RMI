@@ -39,31 +39,33 @@ public class DisSumMaster implements TopicListenerInterface{
         TopicListenerInterface emonitor = (TopicListenerInterface) UnicastRemoteObject.exportObject(monitor, 0);
         servicioMensaje.MsgQ_Subscribe("Results",emonitor);
 
-        try {
-            tempSem.acquire();
-            int calculate = Integer.parseInt(args[0]);
-            int control_start=0;
-            int control_end=0;
-            int MaxIndex = (calculate);
-            int NumIndexes = (MaxIndex / numWorkers);
-            for (int h = 0; h < numWorkers; h++) {
-                int StartIndex, FinishIndex;
-                StartIndex = (int) ((NumIndexes * h) + control_start);
-                FinishIndex = (int) ((NumIndexes * (h + 1)) + control_end);
-                if ((MaxIndex % numWorkers) > h) {
-                    control_end++;
-                    FinishIndex += control_end;
-                }
-                System.out.println("Fill : " + h + " " + StartIndex + " " + FinishIndex);
-                int finalStartIndex = StartIndex;
-                int finalFinishIndex = FinishIndex;
-                String range = finalStartIndex + "-" + finalFinishIndex;
-                servicioMensaje.MsgQ_Publish("Work", range, 0);
-                control_start = control_end;
-            }
-        }catch (InterruptedException e) {
-            // Handle InterruptedException
+
+        System.out.println("Waiting for the semaphore");
+        while(!servicioMensaje.canIPublish()){
+
         }
+        System.out.println("Semaphore released");
+        int calculate = Integer.parseInt(args[0]);
+        int control_start=0;
+        int control_end=0;
+        int MaxIndex = (calculate);
+        int NumIndexes = (MaxIndex / numWorkers);
+        for (int h = 0; h < numWorkers; h++) {
+            int StartIndex, FinishIndex;
+            StartIndex = (int) ((NumIndexes * h) + control_start);
+            FinishIndex = (int) ((NumIndexes * (h + 1)) + control_end);
+            if ((MaxIndex % numWorkers) > h) {
+                control_end++;
+                FinishIndex += control_end;
+            }
+            System.out.println("Fill : " + h + " " + StartIndex + " " + FinishIndex);
+            int finalStartIndex = StartIndex;
+            int finalFinishIndex = FinishIndex;
+            String range = finalStartIndex + "-" + finalFinishIndex;
+            servicioMensaje.MsgQ_Publish("Work", range, 0);
+            control_start = control_end;
+        }
+
     }
 
     @Override

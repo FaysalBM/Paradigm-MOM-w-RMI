@@ -30,6 +30,7 @@ public class DisSumWorker implements TopicListenerInterface{
         // Exportar el objeto de la clase de la implementación al stub del interfase.
         TopicListenerInterface emonitor = (TopicListenerInterface) UnicastRemoteObject.exportObject(monitor, 0);
         servicioMensaje.MsgQ_Subscribe("Work", emonitor);
+        System.out.println("Client es subscriu a work");
         while(true){
 
         }
@@ -45,6 +46,7 @@ public class DisSumWorker implements TopicListenerInterface{
         int secondNumber = Integer.parseInt(parts[1]);
         long result = SumatorioMPrimos.calcularSumaPrimos(firstNumber, secondNumber);
         servicioMensaje.MsgQ_Publish("Results", String.valueOf(result), 0);
+        System.out.println("Client envia resultat a Results");
     }
 
     @Override
