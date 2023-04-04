@@ -8,7 +8,7 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 
 public class DisSumWorker implements TopicListenerInterface{
-
+    static MessageAPI servicioMensaje;
     public static void main(String[] args) throws MalformedURLException, NotBoundException, RemoteException {
         Registry registry = LocateRegistry.getRegistry("127.0.0.1", 0);
         String tempR = "127.0.0.1";
@@ -24,7 +24,7 @@ public class DisSumWorker implements TopicListenerInterface{
         Remote servicioRemoto = Naming.lookup(registro);
 
         // Convertir a un interfaz
-        MessageAPI servicioMensaje = (MessageAPI) servicioRemoto;
+        servicioMensaje = (MessageAPI) servicioRemoto;
         DisSumWorker monitor = new DisSumWorker();
 
         // Exportar el objeto de la clase de la implementación al stub del interfase.
@@ -36,8 +36,15 @@ public class DisSumWorker implements TopicListenerInterface{
     }
 
     @Override
-    public void onTopicMessage(String message) {
-        System.out.println(message);
+    public void onTopicMessage(String message) throws MalformedURLException, RemoteException {
+        System.out.println("Calculating the range " + message);
+        // Split the string based on the '-' delimiter
+        String[] parts = message.split("-");
+        // Parse the substrings to integers
+        int firstNumber = Integer.parseInt(parts[0]);
+        int secondNumber = Integer.parseInt(parts[1]);
+        long result = SumatorioMPrimos.calcularSumaPrimos(firstNumber, secondNumber);
+        servicioMensaje.MsgQ_Publish("Results", String.valueOf(result), 0);
     }
 
     @Override

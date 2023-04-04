@@ -7,12 +7,15 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
 import java.util.Queue;
+import java.util.concurrent.Semaphore;
 
 public class MessageAPIImpl implements MessageAPI {
 
-
+    public Semaphore semaphore = new Semaphore(0); // Initialize semaphore with permits = 1
     public HashMap<String,TopicQueue> topicQueues = new HashMap<String, TopicQueue>();
     public HashMap<String, Vector<Message>> topicMessages = new HashMap<>();
+    private int expectedClients = 0;
+
     protected MessageAPIImpl() throws RemoteException {
         super();
     }
@@ -96,8 +99,10 @@ public class MessageAPIImpl implements MessageAPI {
             int x = topicQueues.get(topic).clientsSuscribed.size();
             System.out.println("Clients subscribed: "+x);
             //Recorrer los usuarios de ese topic i invocar el metodo de onTopicMessage del listener de los suscritores
-            for(int i = 0; i < x; i++){
-                topicQueues.get(topic).clientsSuscribed.get(i).onTopicMessage("Hola");
+            if(topicQueues.get(topic).messages.size() == expectedClients){
+                for(int i = 0; i < x; i++){
+                    topicQueues.get(topic).clientsSuscribed.get(i).onTopicMessage(topicQueues.get(topic).messages.get(i).getMessage());
+                }
             }
             System.out.println("Messsage added");
             return null;
@@ -108,9 +113,18 @@ public class MessageAPIImpl implements MessageAPI {
     @Override
     public EMomError MsgQ_Subscribe(String topic, TopicListenerInterface listener) {
         if(topicQueues.containsKey(topic)){
+            if(topicQueues.get(topic).clientsSuscribed.size() == expectedClients){
+                semaphore.release();
+            }
             topicQueues.get(topic).subClient(listener);
             return null;
         }
         return null;
+    }
+
+    @Override
+    public Semaphore getSemaphore(int subs) {
+        this.expectedClients = subs;
+        return semaphore;
     }
 }

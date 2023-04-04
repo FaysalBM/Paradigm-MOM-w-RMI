@@ -2,6 +2,7 @@ import javax.management.ValueExp;
 import java.net.MalformedURLException;
 import java.rmi.RemoteException;
 import java.util.Vector;
+import java.util.concurrent.Semaphore;
 
 public interface MessageAPI extends java.rmi.Remote {
 
@@ -14,4 +15,5 @@ public interface MessageAPI extends java.rmi.Remote {
     EMomError MsgQ_CloseTopic(String topicname) throws RemoteException, MalformedURLException;
     EMomError MsgQ_Publish(String topic, String message, int type) throws RemoteException, MalformedURLException;
     EMomError MsgQ_Subscribe(String topic, TopicListenerInterface listener) throws RemoteException, MalformedURLException;
+    Semaphore getSemaphore(int subs);
 }
