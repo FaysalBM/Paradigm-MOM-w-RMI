@@ -10,8 +10,8 @@ import java.util.concurrent.Semaphore;
 public class MessageAPIImpl implements MessageAPI {
 
     public Semaphore semaphore = new Semaphore(0); // Initialize semaphore with permits = 1
-    public HashMap<String,TopicQueue> topicQueues = new HashMap<String, TopicQueue>();
-    public HashMap<String, Vector<Message>> topicMessages = new HashMap<>();
+    public final HashMap<String,TopicQueue> topicQueues = new HashMap<String, TopicQueue>();
+    public final HashMap<String, Vector<Message>> topicMessages = new HashMap<>();
     private int expectedClients = 0;
     public Boolean canPublish = false;
     protected MessageAPIImpl() throws RemoteException {
@@ -36,7 +36,9 @@ public class MessageAPIImpl implements MessageAPI {
         if (topicMessages.containsKey(msgqname)){
             return null;
         }else{
-            topicMessages.put(msgqname, cola);
+            synchronized (topicMessages){
+                topicMessages.put(msgqname, cola);
+            }
         }
         return null;
     }
@@ -54,8 +56,10 @@ public class MessageAPIImpl implements MessageAPI {
     @Override
     public EMomError MsgQ_SendMessage(String msgqname, String message, int type) {
         if(!topicMessages.containsKey(msgqname)) return new EMomError("Error, cola closed");
-        Message temp = new Message(message, type);
-        topicMessages.get(msgqname).add(temp);
+        synchronized (topicMessages.get(msgqname)){
+            Message temp = new Message(message, type);
+            topicMessages.get(msgqname).add(temp);
+        }
         return new EMomError("MEssage added to the queue for" + msgqname);
     }
 
@@ -75,7 +79,9 @@ public class MessageAPIImpl implements MessageAPI {
         if(topicQueues.containsKey(topicname)){
             return null;
         }else{
-            topicQueues.put(topicname, new TopicQueue(mode));
+            synchronized (topicQueues){
+                topicQueues.put(topicname, new TopicQueue(mode));
+            }
         }
         return null;
     }
@@ -93,23 +99,25 @@ public class MessageAPIImpl implements MessageAPI {
     @Override
     public EMomError MsgQ_Publish(String topic, String message, int type) throws MalformedURLException, RemoteException {
         if(topicQueues.containsKey(topic)){
-            topicQueues.get(topic).addMessage(new Message(message, type));
-            System.out.println("Messsage added to the respective history");
-            int x = topicQueues.get(topic).clientsSuscribed.size();
-            System.out.println("Clients subscribed: "+x);
-            //Recorrer los usuarios de ese topic i invocar el metodo de onTopicMessage del listener de los suscritores
-            if(Objects.equals(topic, "Work")){
-                if(topicQueues.get(topic).messages.size() == expectedClients){
+            synchronized (topicQueues.get(topic)){
+                topicQueues.get(topic).addMessage(new Message(message, type));
+                System.out.println("Messsage added to the respective history");
+                int x = topicQueues.get(topic).clientsSuscribed.size();
+                System.out.println("Clients subscribed: "+x);
+                //Recorrer los usuarios de ese topic i invocar el metodo de onTopicMessage del listener de los suscritores
+                if(Objects.equals(topic, "Work")){
+                    if(topicQueues.get(topic).messages.size() == expectedClients){
+                        for(int i = 0; i < x; i++){
+                            topicQueues.get(topic).clientsSuscribed.get(i).onTopicMessage(topicQueues.get(topic).messages.get(i).getMessage());
+                        }
+                    }
+                }else{
                     for(int i = 0; i < x; i++){
-                        topicQueues.get(topic).clientsSuscribed.get(i).onTopicMessage(topicQueues.get(topic).messages.get(i).getMessage());
+                        topicQueues.get(topic).clientsSuscribed.get(i).onTopicMessage(message);
                     }
                 }
-            }else{
-                for(int i = 0; i < x; i++){
-                    topicQueues.get(topic).clientsSuscribed.get(i).onTopicMessage(message);
-                }
+                System.out.println("Messsage sended");
             }
-            System.out.println("Messsage sended");
             return null;
         }
         return null;
@@ -128,7 +136,6 @@ public class MessageAPIImpl implements MessageAPI {
                     System.out.println("Semaphore released");
                 }
             }
-
             return null;
         }
         return null;
