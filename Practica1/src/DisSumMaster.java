@@ -6,11 +6,12 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.Vector;
 import java.util.concurrent.Semaphore;
 
 import static java.lang.Thread.sleep;
 
-public class DisSumMaster implements TopicListenerInterface{
+public class DisSumMaster{
     public int totalResult = 0;
     public static void main(String[] args) throws MalformedURLException, NotBoundException, RemoteException, InterruptedException {
         Registry registry = LocateRegistry.getRegistry("127.0.0.1", 0);
@@ -33,13 +34,7 @@ public class DisSumMaster implements TopicListenerInterface{
         int numWorkers = Integer.parseInt(args[1]);
         Semaphore tempSem = servicioMensaje.getSemaphore(numWorkers);
         servicioMensaje.MsgQ_CreateTopic("Work", null);
-        servicioMensaje.MsgQ_CreateTopic("Results", null);
-
-        //Subsrcibe the master to receive the messages from users.
-        DisSumMaster monitor = new DisSumMaster();
-        TopicListenerInterface emonitor = (TopicListenerInterface) UnicastRemoteObject.exportObject(monitor, 0);
-        servicioMensaje.MsgQ_Subscribe("Results",emonitor);
-
+        servicioMensaje.MsgQ_CreateQueue("Results");
 
         System.out.println("Waiting for the semaphore");
         servicioMensaje.catchSem();
@@ -63,18 +58,20 @@ public class DisSumMaster implements TopicListenerInterface{
             servicioMensaje.MsgQ_Publish("Work", range, 0);
             control_start = control_end;
         }
-
+        Vector<Integer> received = new Vector<>();
+        int result = 0;
+        int cont = 0;
+        while(cont != numWorkers * numWorkers){
+            String x = servicioMensaje.MsgQ_ReceiveMessage("Results", 0);
+            if(x != null){
+                cont++;
+                if(!received.contains(Integer.parseInt(x))){
+                    received.add(Integer.parseInt(x));
+                    result += Integer.parseInt(x);
+                }
+            }
+        }
+        System.out.println("Result total received: " + result);
     }
 
-    @Override
-    public void onTopicMessage(String message) throws RemoteException, MalformedURLException {
-        System.out.println("Received the value calculated: " + message);
-        totalResult = totalResult + Integer.parseInt(message);
-        System.out.println("Total result for now is: "+totalResult);
-    }
-
-    @Override
-    public void onTopicClose(String topic) throws RemoteException, MalformedURLException {
-        System.out.println("Topic closed: " + topic);
-    }
 }

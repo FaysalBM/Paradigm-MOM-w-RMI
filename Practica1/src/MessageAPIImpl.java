@@ -60,18 +60,28 @@ public class MessageAPIImpl implements MessageAPI {
             Message temp = new Message(message, type);
             topicMessages.get(msgqname).add(temp);
         }
-        return new EMomError("MEssage added to the queue for" + msgqname);
+        return new EMomError("Message added to the queue for" + msgqname);
     }
 
     @Override
     public String MsgQ_ReceiveMessage(String msgqname, int type) {
-        String result = topicMessages.get(msgqname).get(0).getMessage();
-        if (type == 0) return result;
-        Vector<Message> temp = topicMessages.get(msgqname);
-        for (int i = 0; i < temp.capacity(); i++){
-            if (temp.get(0).getType() == type) return temp.get(0).getMessage();
+        if(topicMessages.get(msgqname).size() > 0){
+            String result = topicMessages.get(msgqname).get(0).getMessage();
+            if (type == 0) {
+                topicMessages.get(msgqname).remove(0);
+                return result;
+            }
+            Vector<Message> temp = topicMessages.get(msgqname);
+            for (int i = 0; i < temp.size(); i++){
+                if (temp.get(i).getType() == type) {
+                    String t = temp.get(i).getMessage();
+                    temp.remove(i);
+                    return t;
+                }
+
+            }
         }
-        return "No Message available";
+        return null;
     }
 
     @Override
@@ -106,16 +116,8 @@ public class MessageAPIImpl implements MessageAPI {
                 int x = topicQueues.get(topic).clientsSuscribed.size();
                 System.out.println("Clients subscribed: "+x);
                 //Recorrer los usuarios de ese topic i invocar el metodo de onTopicMessage del listener de los suscritores
-                if(Objects.equals(topic, "Work")){
-                    if(topicQueues.get(topic).messages.size() == expectedClients){
-                        for(int i = 0; i < x; i++){
-                            topicQueues.get(topic).clientsSuscribed.get(i).onTopicMessage(topicQueues.get(topic).messages.get(i).getMessage());
-                        }
-                    }
-                }else{
-                    for(int i = 0; i < x; i++){
-                        topicQueues.get(topic).clientsSuscribed.get(i).onTopicMessage(message);
-                    }
+                for(int i = 0; i < x; i++){
+                    topicQueues.get(topic).clientsSuscribed.get(i).onTopicMessage(message);
                 }
                 System.out.println("Messsage sended");
             }

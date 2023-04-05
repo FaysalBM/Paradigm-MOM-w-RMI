@@ -45,7 +45,7 @@ public class DisSumWorker implements TopicListenerInterface{
         int firstNumber = Integer.parseInt(parts[0]);
         int secondNumber = Integer.parseInt(parts[1]);
         long result = SumatorioMPrimos.calcularSumaPrimos(firstNumber, secondNumber);
-        servicioMensaje.MsgQ_Publish("Results", String.valueOf(result), 0);
+        servicioMensaje.MsgQ_SendMessage("Results", String.valueOf(result), 0);
         System.out.println("Client envia resultat a Results");
     }
 
