@@ -34,7 +34,7 @@ public class MessageAPIImpl implements MessageAPI {
     public EMomError MsgQ_CreateQueue(String msgqname) {
         Vector<Message> cola = new Vector<>();
         if (topicMessages.containsKey(msgqname)){
-            return null;
+            return new EMomError("The queue with topic " + msgqname + " already exists!");
         }else{
             synchronized (topicMessages){
                 topicMessages.put(msgqname, cola);
@@ -77,7 +77,8 @@ public class MessageAPIImpl implements MessageAPI {
     @Override
     public EMomError MsgQ_CreateTopic(String topicname, EPublishMode mode) {
         if(topicQueues.containsKey(topicname)){
-            return null;
+            System.out.println("This topic already Exists!");
+            return new EMomError("This topic already exists!");
         }else{
             synchronized (topicQueues){
                 topicQueues.put(topicname, new TopicQueue(mode));
@@ -118,7 +119,6 @@ public class MessageAPIImpl implements MessageAPI {
                 }
                 System.out.println("Messsage sended");
             }
-            return null;
         }
         return null;
     }
@@ -132,7 +132,7 @@ public class MessageAPIImpl implements MessageAPI {
             System.out.println(expectedClients);
             if(Objects.equals(topic, "Work")){
                 if(topicQueues.get(topic).clientsSuscribed.size() >= expectedClients){
-                    canPublish = true;
+                    semaphore.release();
                     System.out.println("Semaphore released");
                 }
             }
@@ -146,8 +146,14 @@ public class MessageAPIImpl implements MessageAPI {
         this.expectedClients = subs;
         return semaphore;
     }
+
     @Override
-    public Boolean canIPublish() {
-        return canPublish;
+    public void catchSem() throws RemoteException, MalformedURLException, InterruptedException {
+        semaphore.acquire();
+    }
+
+    @Override
+    public void releaseSem() throws RemoteException, MalformedURLException {
+        semaphore.release();
     }
 }

@@ -16,6 +16,6 @@ public interface MessageAPI extends java.rmi.Remote {
     EMomError MsgQ_Publish(String topic, String message, int type) throws RemoteException, MalformedURLException;
     EMomError MsgQ_Subscribe(String topic, TopicListenerInterface listener) throws RemoteException, MalformedURLException;
     Semaphore getSemaphore(int subs) throws RemoteException, MalformedURLException;
-
-    Boolean canIPublish() throws RemoteException, MalformedURLException;
+    void catchSem() throws RemoteException, MalformedURLException, InterruptedException;
+    void releaseSem() throws RemoteException, MalformedURLException;
 }

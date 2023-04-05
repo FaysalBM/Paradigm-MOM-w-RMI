@@ -42,9 +42,7 @@ public class DisSumMaster implements TopicListenerInterface{
 
 
         System.out.println("Waiting for the semaphore");
-        while(!servicioMensaje.canIPublish()){
-
-        }
+        servicioMensaje.catchSem();
         System.out.println("Semaphore released");
         int calculate = Integer.parseInt(args[0]);
         int control_start=0;
@@ -59,7 +57,6 @@ public class DisSumMaster implements TopicListenerInterface{
                 control_end++;
                 FinishIndex += control_end;
             }
-            System.out.println("Fill : " + h + " " + StartIndex + " " + FinishIndex);
             int finalStartIndex = StartIndex;
             int finalFinishIndex = FinishIndex;
             String range = finalStartIndex + "-" + finalFinishIndex;

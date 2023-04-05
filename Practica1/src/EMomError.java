@@ -1,5 +1,7 @@
-public class EMomError {
-    private String error;
+import java.io.Serializable;
+
+public class EMomError implements Serializable {
+    private final String error;
     public EMomError(String error){
         this.error = error;
     }
