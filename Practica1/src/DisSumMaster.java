@@ -57,7 +57,7 @@ public class DisSumMaster{
             String range = finalStartIndex + "-" + finalFinishIndex;
             servicioMensaje.MsgQ_Publish("Work", range, 0);
             System.out.println("Message Published");
-            control_start = control_end;
+            control_start = control_end;<
         }
         System.out.println("Messages Published");
         Vector<Integer> received = new Vector<>();
