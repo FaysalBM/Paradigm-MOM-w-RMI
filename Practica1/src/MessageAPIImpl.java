@@ -125,7 +125,7 @@ public class MessageAPIImpl implements MessageAPI {
                 topicQueues.get(topic).addMessage(new Message(message, type));
                 System.out.println("Messsage added to the respective history");
                 int x = topicQueues.get(topic).clientsSuscribed.size();
-                System.out.println("Clients subscribed: " + x);
+                System.out.println("Clients subscribed into " + topic +": " + x);
                 //Recorrer los usuarios de ese topic i invocar el metodo de onTopicMessage del listener de los suscritores
                 System.out.println(topicQueues.get(topic).getMode());
                 if(Objects.equals(topicQueues.get(topic).getMode(), "B")){

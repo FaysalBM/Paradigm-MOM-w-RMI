@@ -34,6 +34,7 @@ public class DisSumWorker implements TopicListenerInterface{
         // Exportar el objeto de la clase de la implementación al stub del interfase.
         TopicListenerInterface emonitor = (TopicListenerInterface) UnicastRemoteObject.exportObject(monitor, 0);
         servicioMensaje.MsgQ_Subscribe("Work", emonitor);
+        servicioMensaje.MsgQ_Subscribe("Log", emonitor);
         System.out.println("Client es subscriu a work");
         while(true){
 

@@ -34,6 +34,7 @@ public class DisSumMaster{
         int numWorkers = Integer.parseInt(args[1]);
         Semaphore tempSem = servicioMensaje.getSemaphore(numWorkers);
         servicioMensaje.MsgQ_CreateTopic("Work", "RR");
+        servicioMensaje.MsgQ_CreateTopic("Log", "B");
         servicioMensaje.MsgQ_CreateQueue("Results");
         System.out.println("Result expected: " + SumatorioMPrimos.calcularSumaPrimos(0, Long.parseLong(args[0])));
         System.out.println("Waiting for the semaphore");
@@ -56,10 +57,9 @@ public class DisSumMaster{
             int finalFinishIndex = FinishIndex;
             String range = finalStartIndex + "-" + finalFinishIndex;
             servicioMensaje.MsgQ_Publish("Work", range, 0);
-            System.out.println("Message Published");
-            control_start = control_end;<
+            control_start = control_end;
         }
-        System.out.println("Messages Published");
+        servicioMensaje.MsgQ_Publish("Log", "Worker published all the available work", 0);
         Vector<Integer> received = new Vector<>();
         int result = 0;
         int cont = 0;
@@ -74,11 +74,16 @@ public class DisSumMaster{
             }
         }
         System.out.println("Result total received: " + result);
+        if(result == SumatorioMPrimos.calcularSumaPrimos(0, Long.parseLong(args[0]))){
+            servicioMensaje.MsgQ_Publish("Log", "WELL DONE! - Result total received and Is correct.", 0);
+        }else{
+            servicioMensaje.MsgQ_Publish("Log", "BAD NEWS! - Result total received and Is NOT correct.", 0);
+        }
         servicioMensaje.MsgQ_CloseQueue("Results");
-        System.out.println("Results Queue closed!");
+        servicioMensaje.MsgQ_Publish("Log", "Results Queue closed.", 0);
         servicioMensaje.MsgQ_CloseTopic("Work");
-        System.out.println("Work Topic queue closed!");
-        System.out.println("Queue and Topic closed");
+        servicioMensaje.MsgQ_Publish("Log", "Work topic queue closed.", 0);
+        servicioMensaje.MsgQ_Publish("Log", "Worker ended execution.", 0);
     }
 
 }
