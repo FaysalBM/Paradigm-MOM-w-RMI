@@ -16,6 +16,7 @@ public class MessageAPIImpl implements MessageAPI {
     public final HashMap<String, Vector<Message>> topicMessages = new HashMap<>();
     private int expectedClients = 0;
     public Boolean canPublish = false;
+    public int counterClient = 0;
     protected MessageAPIImpl() throws RemoteException {
         super();
     }
@@ -59,12 +60,13 @@ public class MessageAPIImpl implements MessageAPI {
     //Controlar condiciones de carrera al publicar
     @Override
     public EMomError MsgQ_SendMessage(String msgqname, String message, int type) {
-        if(!topicMessages.containsKey(msgqname)) return new EMomError("Error, cola closed");
+        if(!topicMessages.containsKey(msgqname)) return null;
         synchronized (topicMessages.get(msgqname)){
             Message temp = new Message(message, type);
             topicMessages.get(msgqname).add(temp);
         }
-        return new EMomError("Message added to the queue for" + msgqname);
+        System.out.println("Message added to the queue " + msgqname + " -> " + message);
+        return null;
     }
 
     @Override
@@ -73,6 +75,7 @@ public class MessageAPIImpl implements MessageAPI {
             if(topicMessages.get(msgqname).size() > 0){
                 String result = topicMessages.get(msgqname).get(0).getMessage();
                 if (type == 0) {
+                    System.out.println("Message received -> " + result);
                     topicMessages.get(msgqname).remove(0);
                     return result;
                 }
@@ -124,20 +127,23 @@ public class MessageAPIImpl implements MessageAPI {
                 int x = topicQueues.get(topic).clientsSuscribed.size();
                 System.out.println("Clients subscribed: " + x);
                 //Recorrer los usuarios de ese topic i invocar el metodo de onTopicMessage del listener de los suscritores
-                if(Objects.equals(topicQueues.get(topic).modeP, "B")){
+                System.out.println(topicQueues.get(topic).getMode());
+                if(Objects.equals(topicQueues.get(topic).getMode(), "B")){
+                    System.out.println("Publishing in Broadcast");
                     for(int i = 0; i < x; i++){
                         topicQueues.get(topic).clientsSuscribed.get(i).onTopicMessage(message);
-                        topicQueues.get(topic).messages.remove(topicMessages.get(topic).size() - 1);
                     }
-                }else{
-                    for(int i = 0; i < topicQueues.get(topic).messages.size(); i++){
-                        String message2 = topicQueues.get(topic).messages.get(i).getMessage();
-                        topicQueues.get(topic).clientsSuscribed.get(i).onTopicMessage(message2);
-                        topicQueues.get(topic).messages.remove(i);
+                    topicQueues.get(topic).messages.remove(topicMessages.get(topic).size() - 1);
+                }else if(Objects.equals(topicQueues.get(topic).getMode(), "RR")){
+                    System.out.println("Publishing in Round Robin");
+                    topicQueues.get(topic).clientsSuscribed.get(counterClient).onTopicMessage(message);
+                    counterClient++;
+                    if(counterClient == expectedClients){
+                        counterClient = 0;
                     }
                 }
-                System.out.println("Messsage sended");
             }
+            System.out.println("Messsage sended");
         }
         return null;
     }

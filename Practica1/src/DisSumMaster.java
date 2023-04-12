@@ -33,7 +33,7 @@ public class DisSumMaster{
         System.out.println("Preparing Queue");
         int numWorkers = Integer.parseInt(args[1]);
         Semaphore tempSem = servicioMensaje.getSemaphore(numWorkers);
-        servicioMensaje.MsgQ_CreateTopic("Work", null);
+        servicioMensaje.MsgQ_CreateTopic("Work", "RR");
         servicioMensaje.MsgQ_CreateQueue("Results");
         System.out.println("Result expected: " + SumatorioMPrimos.calcularSumaPrimos(0, Long.parseLong(args[0])));
         System.out.println("Waiting for the semaphore");
@@ -56,12 +56,14 @@ public class DisSumMaster{
             int finalFinishIndex = FinishIndex;
             String range = finalStartIndex + "-" + finalFinishIndex;
             servicioMensaje.MsgQ_Publish("Work", range, 0);
+            System.out.println("Message Published");
             control_start = control_end;
         }
+        System.out.println("Messages Published");
         Vector<Integer> received = new Vector<>();
         int result = 0;
         int cont = 0;
-        while(cont != numWorkers * numWorkers){
+        while(cont != numWorkers){
             String x = servicioMensaje.MsgQ_ReceiveMessage("Results", 0);
             if(x != null){
                 cont++;
