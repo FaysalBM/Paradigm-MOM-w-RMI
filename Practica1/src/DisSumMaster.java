@@ -35,7 +35,7 @@ public class DisSumMaster{
         Semaphore tempSem = servicioMensaje.getSemaphore(numWorkers);
         servicioMensaje.MsgQ_CreateTopic("Work", null);
         servicioMensaje.MsgQ_CreateQueue("Results");
-
+        System.out.println("Result expected: " + SumatorioMPrimos.calcularSumaPrimos(0, Long.parseLong(args[0])));
         System.out.println("Waiting for the semaphore");
         servicioMensaje.catchSem();
         System.out.println("Semaphore released");
@@ -72,6 +72,11 @@ public class DisSumMaster{
             }
         }
         System.out.println("Result total received: " + result);
+        servicioMensaje.MsgQ_CloseQueue("Results");
+        System.out.println("Results Queue closed!");
+        servicioMensaje.MsgQ_CloseTopic("Work");
+        System.out.println("Work Topic queue closed!");
+        System.out.println("Queue and Topic closed");
     }
 
 }

@@ -7,8 +7,12 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 
+import static java.lang.System.exit;
+import static java.lang.Thread.sleep;
+
 public class DisSumWorker implements TopicListenerInterface{
     static MessageAPI servicioMensaje;
+    int totalWork = 0;
     public static void main(String[] args) throws MalformedURLException, NotBoundException, RemoteException {
         Registry registry = LocateRegistry.getRegistry("127.0.0.1", 0);
         String tempR = "127.0.0.1";
@@ -47,10 +51,12 @@ public class DisSumWorker implements TopicListenerInterface{
         long result = SumatorioMPrimos.calcularSumaPrimos(firstNumber, secondNumber);
         servicioMensaje.MsgQ_SendMessage("Results", String.valueOf(result), 0);
         System.out.println("Client envia resultat a Results");
+        totalWork++;
     }
 
     @Override
-    public void onTopicClose(String topic) {
-        System.out.println(topic);
+    public void onTopicClose(String topic) throws InterruptedException {
+        System.out.println("The topic queue " + topic + "has been closed");
+        System.out.println("Total Work done: "+ totalWork);
     }
 }

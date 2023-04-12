@@ -7,6 +7,8 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
 import java.util.concurrent.Semaphore;
 
+import static java.lang.Thread.sleep;
+
 public class MessageAPIImpl implements MessageAPI {
 
     public Semaphore semaphore = new Semaphore(0); // Initialize semaphore with permits = 1
@@ -20,7 +22,6 @@ public class MessageAPIImpl implements MessageAPI {
 
     @Override
     public void MsqQ_Init(String ServerAddress) throws RemoteException, MalformedURLException {
-
         MessageAPI apiMess = (MessageAPI) UnicastRemoteObject.exportObject(this, 0);
         Registry registry = LocateRegistry.getRegistry(ServerAddress, 0);
         // Crear la URL del registro.
@@ -45,12 +46,15 @@ public class MessageAPIImpl implements MessageAPI {
 
     @Override
     public EMomError MsgQ_CloseQueue(String msgqname) {
-        if (!topicMessages.containsKey(msgqname)){
-            return new EMomError("P2P Chat doesn't exist");
-        }else{
-            topicMessages.remove(msgqname);
+        synchronized (topicMessages){
+            if (!topicMessages.containsKey(msgqname)){
+                return null;
+            }else{
+                topicMessages.remove(msgqname);
+                System.out.println("Closed Queue " + msgqname);
+            }
+            return null;
         }
-        return new EMomError("Done");
     }
     //Controlar condiciones de carrera al publicar
     @Override
@@ -65,27 +69,29 @@ public class MessageAPIImpl implements MessageAPI {
 
     @Override
     public String MsgQ_ReceiveMessage(String msgqname, int type) {
-        if(topicMessages.get(msgqname).size() > 0){
-            String result = topicMessages.get(msgqname).get(0).getMessage();
-            if (type == 0) {
-                topicMessages.get(msgqname).remove(0);
-                return result;
-            }
-            Vector<Message> temp = topicMessages.get(msgqname);
-            for (int i = 0; i < temp.size(); i++){
-                if (temp.get(i).getType() == type) {
-                    String t = temp.get(i).getMessage();
-                    temp.remove(i);
-                    return t;
+        synchronized (topicMessages.get(msgqname)){
+            if(topicMessages.get(msgqname).size() > 0){
+                String result = topicMessages.get(msgqname).get(0).getMessage();
+                if (type == 0) {
+                    topicMessages.get(msgqname).remove(0);
+                    return result;
                 }
+                Vector<Message> temp = topicMessages.get(msgqname);
+                for (int i = 0; i < temp.size(); i++){
+                    if (temp.get(i).getType() == type) {
+                        String t = temp.get(i).getMessage();
+                        temp.remove(i);
+                        return t;
+                    }
 
+                }
             }
         }
         return null;
     }
 
     @Override
-    public EMomError MsgQ_CreateTopic(String topicname, EPublishMode mode) {
+    public EMomError MsgQ_CreateTopic(String topicname, String mode) {
         if(topicQueues.containsKey(topicname)){
             System.out.println("This topic already Exists!");
             return new EMomError("This topic already exists!");
@@ -98,12 +104,14 @@ public class MessageAPIImpl implements MessageAPI {
     }
 
     @Override
-    public EMomError MsgQ_CloseTopic(String topicname) {
-        if(topicQueues.get(topicname).messages.size() == 0){
-            topicQueues.remove(topicname);
-            return new EMomError("Topic Queue deleted");
+    public EMomError MsgQ_CloseTopic(String topicname) throws MalformedURLException, RemoteException, InterruptedException {
+        int x = topicQueues.get(topicname).clientsSuscribed.size();
+        for(int i = 0; i < x; i++){
+            topicQueues.get(topicname).clientsSuscribed.get(i).onTopicClose(topicname);
         }
-        return new EMomError("Topc Queue still has messages");
+        topicQueues.remove(topicname);
+        System.out.println("Topic Queue " + topicname + "closed!");
+        return null;
     }
 
     //Controlar condiciones de carrera al publicar
@@ -114,10 +122,19 @@ public class MessageAPIImpl implements MessageAPI {
                 topicQueues.get(topic).addMessage(new Message(message, type));
                 System.out.println("Messsage added to the respective history");
                 int x = topicQueues.get(topic).clientsSuscribed.size();
-                System.out.println("Clients subscribed: "+x);
+                System.out.println("Clients subscribed: " + x);
                 //Recorrer los usuarios de ese topic i invocar el metodo de onTopicMessage del listener de los suscritores
-                for(int i = 0; i < x; i++){
-                    topicQueues.get(topic).clientsSuscribed.get(i).onTopicMessage(message);
+                if(Objects.equals(topicQueues.get(topic).modeP, "B")){
+                    for(int i = 0; i < x; i++){
+                        topicQueues.get(topic).clientsSuscribed.get(i).onTopicMessage(message);
+                        topicQueues.get(topic).messages.remove(topicMessages.get(topic).size() - 1);
+                    }
+                }else{
+                    for(int i = 0; i < topicQueues.get(topic).messages.size(); i++){
+                        String message2 = topicQueues.get(topic).messages.get(i).getMessage();
+                        topicQueues.get(topic).clientsSuscribed.get(i).onTopicMessage(message2);
+                        topicQueues.get(topic).messages.remove(i);
+                    }
                 }
                 System.out.println("Messsage sended");
             }
