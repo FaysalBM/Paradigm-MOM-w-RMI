@@ -133,7 +133,7 @@ public class MessageAPIImpl implements MessageAPI {
                     for(int i = 0; i < x; i++){
                         topicQueues.get(topic).clientsSuscribed.get(i).onTopicMessage(message);
                     }
-                    topicQueues.get(topic).messages.remove(topicMessages.get(topic).size() - 1);
+                    topicQueues.get(topic).messages.remove(0);
                 }else if(Objects.equals(topicQueues.get(topic).getMode(), "RR")){
                     System.out.println("Publishing in Round Robin");
                     topicQueues.get(topic).clientsSuscribed.get(counterClient).onTopicMessage(message);

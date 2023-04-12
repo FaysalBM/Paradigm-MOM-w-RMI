@@ -46,13 +46,17 @@ public class DisSumWorker implements TopicListenerInterface{
         System.out.println("Calculating the range " + message);
         // Split the string based on the '-' delimiter
         String[] parts = message.split("-");
-        // Parse the substrings to integers
-        int firstNumber = Integer.parseInt(parts[0]);
-        int secondNumber = Integer.parseInt(parts[1]);
-        long result = SumatorioMPrimos.calcularSumaPrimos(firstNumber, secondNumber);
-        servicioMensaje.MsgQ_SendMessage("Results", String.valueOf(result), 0);
-        System.out.println("Client envia resultat a Results");
-        totalWork++;
+        if(parts[0].equals("LOG")){
+            System.out.println(message);
+        }else{
+            // Parse the substrings to integers
+            int firstNumber = Integer.parseInt(parts[0]);
+            int secondNumber = Integer.parseInt(parts[1]);
+            long result = SumatorioMPrimos.calcularSumaPrimos(firstNumber, secondNumber);
+            servicioMensaje.MsgQ_SendMessage("Results", String.valueOf(result), 0);
+            System.out.println("Client envia resultat a Results");
+            totalWork++;
+        }
     }
 
     @Override

@@ -59,7 +59,7 @@ public class DisSumMaster{
             servicioMensaje.MsgQ_Publish("Work", range, 0);
             control_start = control_end;
         }
-        servicioMensaje.MsgQ_Publish("Log", "Worker published all the available work", 0);
+        servicioMensaje.MsgQ_Publish("Log", "LOG-Worker published all the available work", 0);
         Vector<Integer> received = new Vector<>();
         int result = 0;
         int cont = 0;
@@ -75,15 +75,15 @@ public class DisSumMaster{
         }
         System.out.println("Result total received: " + result);
         if(result == SumatorioMPrimos.calcularSumaPrimos(0, Long.parseLong(args[0]))){
-            servicioMensaje.MsgQ_Publish("Log", "WELL DONE! - Result total received and Is correct.", 0);
+            servicioMensaje.MsgQ_Publish("Log", "LOG-WELL DONE! - Result total received and Is correct.", 0);
         }else{
-            servicioMensaje.MsgQ_Publish("Log", "BAD NEWS! - Result total received and Is NOT correct.", 0);
+            servicioMensaje.MsgQ_Publish("Log", "LOG-BAD NEWS! - Result total received and Is NOT correct.", 0);
         }
         servicioMensaje.MsgQ_CloseQueue("Results");
-        servicioMensaje.MsgQ_Publish("Log", "Results Queue closed.", 0);
+        servicioMensaje.MsgQ_Publish("Log", "LOG-Results Queue closed.", 0);
         servicioMensaje.MsgQ_CloseTopic("Work");
-        servicioMensaje.MsgQ_Publish("Log", "Work topic queue closed.", 0);
-        servicioMensaje.MsgQ_Publish("Log", "Worker ended execution.", 0);
+        servicioMensaje.MsgQ_Publish("Log", "LOG-Work topic queue closed.", 0);
+        servicioMensaje.MsgQ_Publish("Log", "LOG-Worker ended execution.", 0);
     }
 
 }
